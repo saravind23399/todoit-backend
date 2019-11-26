@@ -1,3 +1,4 @@
+import config
 from server import server
 
 # Import Models and Schemas
@@ -17,4 +18,4 @@ server.register_blueprint(errorHandlers)
 
 # Start Server
 if __name__ == '__main__':
-    server.run(port=3000, debug=True)
+    server.run(port=3000, debug=config.debug)
