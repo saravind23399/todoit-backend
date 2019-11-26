@@ -1,0 +1,4 @@
+from .db import getDatabaseURI
+
+SQLALCHEMY_DATABASE_URI = getDatabaseURI()
+SQLALCHEMY_TRACK_MODIFICATIONS = False

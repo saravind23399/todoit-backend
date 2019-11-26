@@ -1,0 +1,6 @@
+{
+    "python.pythonPath": "C:\\Users\\sarav\\.virtualenvs\\todoit-backend-wtMwaC-H\\Scripts\\python.exe",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.banditEnabled": false
+}
