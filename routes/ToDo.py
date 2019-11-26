@@ -1,15 +1,12 @@
-from flask import Blueprint
-from ..models import ToDo
-from ..schemas import todo_schema, todos_schema
+# Module Imports
+from flask import Blueprint, jsonify, request, abort
+
+# Import Models and Schemas
+from server import db
+from models import ToDo
+from schemas import todo_schema, todos_schema
 
 todosRoute = Blueprint('todos', __name__)
-
-# Root Route
-@todosRoute.route('/', methods=['GET'])
-def root():
-    return jsonify({
-        'msg': 'Hello World'
-    })
     
 # New ToDo Item
 @todosRoute.route('/todos', methods=['POST'])
@@ -36,6 +33,10 @@ def allTodos():
 @todosRoute.route('/todos/<id>', methods=['GET'])
 def getSingleTodo(id):
     todo = ToDo.query.get(id)
+
+    if todo is None:
+        abort(404, description= f"An Todo Item with the ID, '{id}' does not exist")
+
     return todo_schema.jsonify(todo)
 
 # Update a Todo
