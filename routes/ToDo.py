@@ -1,65 +1,62 @@
 # Module Imports
 from flask import Blueprint, jsonify, request, abort
+from flask_restplus import Namespace, Resource
 
 # Import Models and Schemas
 from server import db
 from models import ToDo
 from schemas import todo_schema, todos_schema
 
-todosRoute = Blueprint('todos', __name__)
+todosRoute = Namespace('ToDo', description='These endpoints specify the CRUD Operations on Todo Items')
+
+# ToDos Route Handler Class
+@todosRoute.route('/')
+class ToDos(Resource):
+    def get(self):
+        todos = ToDo.query.all()
+        result = todos_schema.dump(todos)
+
+        return jsonify(result)
+
+    def post(self):
+        id = request.form['id']
+        title = request.form['title']
+        description = request.form['description']
+
+        new_todo = ToDo(id, title, description)
+        db.session.add(new_todo)
+        db.session.commit()
+
+        return todo_schema.jsonify(new_todo)
     
-# New ToDo Item
-@todosRoute.route('/todos', methods=['POST'])
-def createTodo():
-    id = request.form['id']
-    title = request.form['title']
-    description = request.form['description']
+# ToDo Route Handler Class
+@todosRoute.route('/<int:id>')
+class Todo(Resource):
+    def get(self, id):
+        todo = ToDo.query.get(id)
 
-    new_todo = ToDo(id, title, description)
-    db.session.add(new_todo)
-    db.session.commit()
+        if todo is None:
+            abort(404, description= f"An Todo Item with the ID, '{id}' does not exist")
 
-    return todo_schema.jsonify(new_todo)
+        return todo_schema.jsonify(todo)
 
-# Get all Todos
-@todosRoute.route('/todos', methods=['GET'])
-def allTodos():
-    todos = ToDo.query.all()
-    result = todos_schema.dump(todos)
+    def put(self, id):
+        todo = ToDo.query.get(id)
 
-    return jsonify(result)
+        title = request.form['title']
+        description = request.form['description']
 
-# Get a single Todo
-@todosRoute.route('/todos/<id>', methods=['GET'])
-def getSingleTodo(id):
-    todo = ToDo.query.get(id)
+        todo.title = title
+        todo.description = description
 
-    if todo is None:
-        abort(404, description= f"An Todo Item with the ID, '{id}' does not exist")
+        db.session.commit()
 
-    return todo_schema.jsonify(todo)
+        return todo_schema.jsonify(todo)
 
-# Update a Todo
-@todosRoute.route('/todos/<id>', methods=['PUT'])
-def updateTodo(id):
-    todo = ToDo.query.get(id)
+    def delete(self, id):
+        todo = ToDo.query.get(id)
 
-    title = request.form['title']
-    description = request.form['description']
+        db.session.delete(todo)
+        db.session.commit()
 
-    todo.title = title
-    todo.description = description
-
-    db.session.commit()
-
-    return todo_schema.jsonify(todo)
-
-# Delete a single Todo
-@todosRoute.route('/todos/<id>', methods=['DELETE'])
-def deleteSingleTodo(id):
-    todo = ToDo.query.get(id)
-
-    db.session.delete(todo)
-    db.session.commit()
-
-    return todo_schema.jsonify(todo)
+        return todo_schema.jsonify(todo)

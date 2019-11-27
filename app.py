@@ -1,5 +1,5 @@
 import config
-from server import server
+from server import server, api
 
 # Import Models and Schemas
 from models import ToDo
@@ -11,10 +11,11 @@ from routes import todosRoute
 # Import Error Handlers
 from routes import errorHandlers
 
-# Register Blueprints
-server.register_blueprint(todosRoute)
+# Register Error Handlers
 server.register_blueprint(errorHandlers)
 
+# Add Routes to API
+api.add_namespace(todosRoute, path='/todos')
 
 # Start Server
 if __name__ == '__main__':
