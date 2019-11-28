@@ -1,6 +1,7 @@
 # Module Imports
 from flask import Blueprint, jsonify, request, abort
 from flask_restplus import Namespace, Resource
+from sqlalchemy import exc
 
 # Import Models and Schemas
 from server import db
@@ -10,7 +11,7 @@ from schemas import todo_schema, todos_schema
 todosRoute = Namespace('ToDo', description='These endpoints specify the CRUD Operations on Todo Items')
 
 # ToDos Route Handler Class
-@todosRoute.route('/')
+@todosRoute.route('')
 class ToDos(Resource):
     def get(self):
         todos = ToDo.query.all()
@@ -23,9 +24,12 @@ class ToDos(Resource):
         title = request.form['title']
         description = request.form['description']
 
-        new_todo = ToDo(id, title, description)
-        db.session.add(new_todo)
-        db.session.commit()
+        try:
+            new_todo = ToDo(id, title, description)
+            db.session.add(new_todo)
+            db.session.commit()
+        except exc.SQLAlchemyError:
+            abort(400, description= f"An Todo Item with the ID, '{id}' already exists")
 
         return todo_schema.jsonify(new_todo)
     
@@ -43,11 +47,18 @@ class Todo(Resource):
     def put(self, id):
         todo = ToDo.query.get(id)
 
-        title = request.form['title']
-        description = request.form['description']
+        if todo is None:
+            abort(404, description= f"An Todo Item with the ID, '{id}' does not exist")
 
-        todo.title = title
-        todo.description = description
+        formData = request.form
+
+        if 'title' in formData.keys():
+            title = request.form['title']
+            todo.title = title
+
+        if 'description' in formData.keys():
+            description = request.form['description']
+            todo.description = description
 
         db.session.commit()
 
@@ -55,6 +66,9 @@ class Todo(Resource):
 
     def delete(self, id):
         todo = ToDo.query.get(id)
+
+        if todo is None:
+            abort(404, description= f"An Todo Item with the ID, '{id}' does not exist")
 
         db.session.delete(todo)
         db.session.commit()
